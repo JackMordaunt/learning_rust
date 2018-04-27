@@ -1,4 +1,4 @@
-// sing produces the 12 DAYS of christmas.
+// sing produces the 12 days of christmas.
 pub fn sing() -> String {
     let mut song = String::new();
     for n in 0..12 {
