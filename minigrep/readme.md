@@ -1,4 +1,4 @@
-# grep
+# minigrep
 
 This is a toy implementation of basic `grep` functionality written in rust; to learn rust.
 
