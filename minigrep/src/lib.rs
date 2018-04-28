@@ -11,6 +11,9 @@ pub fn run(cfg: Config) -> Result<(), Box<Error>> {
     let mut f = File::open(cfg.path)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
+    for line in search(&cfg.query, &contents) {
+        println!("{}", line);
+    }
     Ok(())
 }
 
