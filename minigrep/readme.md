@@ -24,3 +24,7 @@ The simplest use case of `grep` searches a specified file for a specified string
 - Iterators.
 - Trait objects.
 
+## Notes
+
+Since we are using `std::env::args` the app will panic if any arguments contain invalid Unicode. To accept invalid Unicode you would use `std::env::args_os`.
+
