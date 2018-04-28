@@ -167,7 +167,6 @@ let r2 = &mut s;
 
 ## The Rules of References
 
-
 1. At any given time, you can have either but not both of:
     - One mutable reference.
     - Any number of immutable references.
