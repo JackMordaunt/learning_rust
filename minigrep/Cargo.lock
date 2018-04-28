@@ -1,4 +1,4 @@
 [[package]]
-name = "command_line_tool"
+name = "minigrep"
 version = "0.1.0"
 
