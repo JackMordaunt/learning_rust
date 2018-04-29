@@ -12,7 +12,11 @@ pub fn run(cfg: Config) -> Result<(), Box<Error>> {
     let mut f = File::open(cfg.path)?;
     let mut contents = String::new();
     f.read_to_string(&mut contents)?;
-    for line in search(&cfg.query, &contents) {
+    let lines = match cfg.case_sensitive {
+        false => search_case_insensitive(&cfg.query, &contents),
+        true => search(&cfg.query, &contents),
+    };
+    for line in lines {
         println!("{}", line);
     }
     Ok(())
@@ -21,18 +25,22 @@ pub fn run(cfg: Config) -> Result<(), Box<Error>> {
 pub struct Config {
     pub query: String,
     pub path: String,
+    pub case_sensitive: bool,
 }
 
 impl Config {
-    pub fn from_args(args: env::Args) -> Result<Config, String> {
-        let mut args: Vec<String> = args.collect();
-        args.remove(0);
-        if args.len() < 2 {
+    pub fn from_args(args: &[String]) -> Result<Config, String> {
+        if args.len() < 3 {
             return Err("not enough arguments".to_string());
         }
-        let query = args.remove(0);
-        let path = args.remove(0);
-        Ok(Config{ query, path })
+        let query = args[1].clone();
+        let path = args[2].clone();
+        let case_sensitive = !env::var("MATCH_CASE").is_err();
+        Ok(Config{
+            query,
+            path,
+            case_sensitive,
+        })
     }
 }
 
@@ -46,22 +54,33 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     found
 }
 
+fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let query = query.to_lowercase();
+    let mut found = Vec::new();
+    for line in contents.lines() {
+        if line.to_lowercase().contains(&query) {
+            found.push(line);
+        }
+    }
+    found
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn config_not_enough_args() {
-        let args: Vec<String> = vec!["one".to_string()];
-        if let Ok(_) =  Config::new(&args) {
+        let args: Vec<String> = vec!["one".to_string(), "two".to_string()];
+        if let Ok(_) =  Config::from_args(&args) {
             panic!("wanted error");
         }
     }
 
     #[test]
     fn config_enough_args() {
-        let args: Vec<String> = vec!["one".to_string(), "two".to_string()];
-        if let Err(err) = Config::new(&args) {
+        let args: Vec<String> = vec!["exe".to_string(), "one".to_string(), "two".to_string()];
+        if let Err(err) = Config::from_args(&args) {
             panic!(format!("unexpected error: {}", err));
         }
     }
@@ -76,6 +95,36 @@ Pick three.";
         assert_eq!(
             vec!["safe, fast, productive."],
             search(query, contents)
+        );
+    }
+
+    #[test]
+    fn case_sensitive() {
+        let query = "duct";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.
+Duct tape.";
+
+        assert_eq!(
+            vec!["safe, fast, productive."],
+            search(query, contents)
+        );
+    }
+
+    #[test]
+    fn case_insensitive() {
+        let query = "rUsT";
+        let contents = "\
+Rust:
+safe, fast, productive.
+Pick three.
+Trust me.";
+
+        assert_eq!(
+            vec!["Rust:", "Trust me."],
+            search_case_insensitive(query, contents)
         );
     }
 }

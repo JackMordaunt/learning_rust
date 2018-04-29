@@ -5,7 +5,8 @@ use std::env;
 
 
 fn main() {
-    let cfg = Config::from_args(env::args()).unwrap_or_else(|err| {
+    let args: Vec<String> = env::args().collect();
+    let cfg = Config::from_args(&args).unwrap_or_else(|err| {
         println!("Could not parse arguments: {}", err);
         process::exit(1);
     });
