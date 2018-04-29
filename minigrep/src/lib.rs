@@ -33,14 +33,39 @@ impl Config {
         if args.len() < 3 {
             return Err("not enough arguments".to_string());
         }
+        let mut case_sensitive = !env::var("MATCH_CASE").is_err();        
         let query = args[1].clone();
         let path = args[2].clone();
-        let case_sensitive = !env::var("MATCH_CASE").is_err();
+        let flags = args.iter().filter(|arg| arg.contains("-"));
+        for f in flags {
+            if f.contains("match") && f.contains("case") {
+                case_sensitive = match f.value() {
+                    Some(v) => v.parse().unwrap_or(false),
+                    None => true,
+                };
+            }
+        }
         Ok(Config{
             query,
             path,
             case_sensitive,
         })
+    }
+}
+
+// Arg returns the value associate with it. 
+trait Arg {
+    fn value(&self) -> Option<String>;
+}
+
+// Arg returns the string value associate with it in the form of: key=value
+impl Arg for String {
+    fn value(&self) -> Option<String> {
+        let parts: Vec<&str> = self.split("=").collect();
+        if parts.len() < 2 {
+            return None
+        }
+        Some(parts[1].to_string())
     }
 }
 
