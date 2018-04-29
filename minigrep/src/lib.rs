@@ -2,6 +2,7 @@ use std::fs::File;
 use std::error::Error;
 // prelude contains useful traits for doing io.
 use std::io::prelude::*;
+use std::env;
 
 // Box is a trait object; it allows us to return an object that automatically 
 // satisfies the Error trait without use needing to be concrete about it.
@@ -23,12 +24,14 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &'static str> {
+    pub fn from_args(args: env::Args) -> Result<Config, String> {
+        let mut args: Vec<String> = args.collect();
+        args.remove(0);
         if args.len() < 2 {
-            return Err("not enough arguments");
+            return Err("not enough arguments".to_string());
         }
-        let query = args[0].clone();
-        let path = args[1].clone();
+        let query = args.remove(0);
+        let path = args.remove(0);
         Ok(Config{ query, path })
     }
 }
