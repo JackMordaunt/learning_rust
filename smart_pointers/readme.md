@@ -2,7 +2,7 @@
 
 - Standard references borrow data with no overhead.
 - Smart pointers act as a reference type with additonal capabilities, eg owning their data.
-- Very examples include:
+- Very common examples:
   - `String`
   - `Vec<T>`
 - Smart pointers are implemented using structs.
