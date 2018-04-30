@@ -20,9 +20,9 @@
 
 - No performance overhead outside of heap access vs stack access.
 - Must used when:
-  - When a type's size cannot be known at compile time.
-  - When you have a large amount of data to transfer ownership and you don't want to copy it when you do so.
-  - When you want to own a value and only care that it's a type that implements a trait rather than knowing it's concrete type (basically your traditional oop interface).
+  - A type's size cannot be known at compile time.
+  - You have a large amount of data to transfer ownership and you don't want to copy it when you do so.
+  - You want to own a value and only care that it's a type that implements a trait rather than knowing it's concrete type (basically your traditional oop interface).
 
 ### Using `Box<T>` to Store Data on the Heap
 
