@@ -53,7 +53,7 @@ mod tests {
     #[test]
     fn config_not_enough_args() {
         let args: Vec<String> = vec!["one".to_string(), "two".to_string()];
-        if let Ok(_) =  Config::from_args(&args) {
+        if let Ok(_) =  Config::from_args(args) {
             panic!("wanted error");
         }
     }
@@ -61,7 +61,7 @@ mod tests {
     #[test]
     fn config_enough_args() {
         let args: Vec<String> = vec!["exe".to_string(), "one".to_string(), "two".to_string()];
-        if let Err(err) = Config::from_args(&args) {
+        if let Err(err) = Config::from_args(args) {
             panic!(format!("unexpected error: {}", err));
         }
     }

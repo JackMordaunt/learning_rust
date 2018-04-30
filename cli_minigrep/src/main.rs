@@ -4,8 +4,7 @@ use std::env;
 
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let cfg = minigrep::Config::from_args(&args).unwrap_or_else(|err| {
+    let cfg = minigrep::Config::from_args(env::args()).unwrap_or_else(|err| {
         println!("Could not parse arguments: {}", err);
         process::exit(1);
     });
