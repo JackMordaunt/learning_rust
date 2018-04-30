@@ -19,7 +19,7 @@
 > `Box<T>` points to data on the heap and has a known size.
 
 - No performance overhead outside of heap access vs stack access.
-- Must used when:
+- Must use when:
   - A type's size cannot be known at compile time.
   - You have a large amount of data to transfer ownership and you don't want to copy it when you do so.
   - You want to own a value and only care that it's a type that implements a trait rather than knowing it's concrete type (basically your traditional oop interface).
