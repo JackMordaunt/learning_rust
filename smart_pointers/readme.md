@@ -171,7 +171,7 @@ fn main() {
 
 - You could call `Rc.clone()`, but the idiomatic way is `Rc::clone(..)` with the associated function.
 
-## `RefCell`: Share Data Immutably
+## `RefCell<T>`: Share Data Immutably
 
 _Interior mutability_ is a design pattern in Rust that allows you to mutate data even when there are immutable references to that data. 
 
