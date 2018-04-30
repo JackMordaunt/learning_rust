@@ -1,6 +1,5 @@
 # Smart Pointers
 
-- Standard references borrow data with no overhead.
 - Smart pointers act as a reference type with additonal capabilities, eg owning their data.
 - Very common examples:
   - `String`
@@ -144,7 +143,8 @@ fn main() {
 
 > `Rc<T>` is a reference counting smart pointer.
 
-- Allow multiple immutable borrows of one piece of data at the same time.
+- Allow multiple immutable borrows of one piece of heap data at the same time.
+  - Specifically: useful when you want to allocate some data on the heap for the rest of the program to read, and can't determine at compile time which part will finish using the data last.
 - Only for single threaded contexts.
 
 ```rust
@@ -239,4 +239,22 @@ This uses `unsafe` code inside a data structure to bend the rules.
      }
      ```
 
-     ​
+
+# Summary
+
+**Smart pointers:**
+
+- Push concerns from compile time to run time where there is  more information.
+  - `Box<Error>` for being polymorphic accross many implementations of `Error`.
+    - You don't statically know the size of the implementor of the trait at compile time.
+      - Polymorphic use of a trait, such as a `Vec<Error>` which might have 10 different concrete types that satisfy the `Error` trait.
+    - Implementing recursive types.
+  - `RefCell<T>` for enforcing borrow checking rules at runtime.
+    - Useful for mutating data within immutable trait methods. 
+    - Eg mock objects.
+  - `Rc<T>` for when you don't statically know when the last consumer of a piece of data will finish.
+    - This means the scope wherein `Rc<T>` is created doesn't have to exist for the entire length of the use of `Rc<T>`.
+- Inverts lifetime dependencies.
+  - Traditionally consumers of data are beholden to the owner of the data.
+  - With smart pointers the owner of the data is beholden to the consumers of it.
+  - `consumers -> owner` becomes `owner -> consumers`.
