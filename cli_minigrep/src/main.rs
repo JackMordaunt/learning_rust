@@ -1,12 +1,11 @@
 extern crate minigrep;
-use minigrep::Config;
 use std::process;
 use std::env;
 
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let cfg = Config::from_args(&args).unwrap_or_else(|err| {
+    let cfg = minigrep::Config::from_args(&args).unwrap_or_else(|err| {
         println!("Could not parse arguments: {}", err);
         process::exit(1);
     });
@@ -15,4 +14,3 @@ fn main() {
         process::exit(1);        
     }
 }
-

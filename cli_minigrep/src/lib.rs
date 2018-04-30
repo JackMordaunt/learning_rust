@@ -1,8 +1,10 @@
+pub mod arg;
+pub mod config;
+
 use std::fs::File;
 use std::error::Error;
-// prelude contains useful traits for doing io.
 use std::io::prelude::*;
-use std::env;
+pub use config::Config;
 
 // Box is a trait object; it allows us to return an object that automatically 
 // satisfies the Error trait without use needing to be concrete about it.
@@ -22,69 +24,6 @@ pub fn run(cfg: Config) -> Result<(), Box<Error>> {
     Ok(())
 }
 
-pub struct Config {
-    pub query: String,
-    pub path: String,
-    pub case_sensitive: bool,
-}
-
-impl Config {
-    pub fn from_args(args: &[String]) -> Result<Config, String> {
-        if args.len() < 3 {
-            return Err("not enough arguments".to_string());
-        }
-        let mut case_sensitive = !env::var("MATCH_CASE").is_err();        
-        let query = args[1].clone();
-        let path = args[2].clone();
-        let flags = args.iter().filter(|arg| arg.contains("-"));
-        for f in flags {
-            if f.contains("match") && f.contains("case") {
-                case_sensitive = f.get_bool()?;
-            }
-        }
-        Ok(Config{
-            query,
-            path,
-            case_sensitive,
-        })
-    }
-}
-
-// Arg is an object that can extract a string or bool value from itself. 
-trait Arg {
-    type Error;
-    fn get_string(&self) -> Result<String, Self::Error>;
-    fn get_bool(&self) -> Result<bool, Self::Error>;
-}
-
-impl Arg for String {
-    type Error = String;
-
-    // --some-flag=hello -> Result<"hello">
-    fn get_string(&self) -> Result<String, Self::Error> {
-        let parts: Vec<&str> = self.split("=").collect();
-        if parts.len() < 2 {
-            return Ok("".to_string())
-        }
-        Ok(parts[1].to_string())
-    }
-
-    // --some-flag -> Result<true>
-    // --some-flag=true -> Result<true>
-    // --some-flag=false -> Result<false>
-    // --some-flag=not-a-boolean -> Result<Self::Error>
-    fn get_bool(&self) -> Result<bool, Self::Error> {
-        match self.get_string() {
-            Ok(s) => {
-                match s.parse() {
-                    Ok(b) => Ok(b),
-                    Err(_) => Err(format!("argument {} should be 'true' or 'false'", self)),
-                }
-            },
-            Err(_) => Ok(true),
-        }
-    }
-}
 
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut found = Vec::new();
