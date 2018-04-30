@@ -42,11 +42,19 @@ impl ::std::iter::Iterator for FibIterator {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn it_works() {
         let want: Vec<u64> = vec![0, 1, 1, 2, 3, 5, 8, 13, 21, 34];
         for (ii, n) in FibIterator::new(10).enumerate() {
             assert_eq!(want[ii], n, "want {}, got {}", want[ii], n);
         }
+    }
+
+    #[test]
+    fn sum() {
+        let want: u64 = 88;
+        let got = FibIterator::new(10).sum();
+        assert_eq!(want, got, "want {}, got {}", want, got);
     }
 }
