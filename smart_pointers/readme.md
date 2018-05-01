@@ -194,7 +194,7 @@ This uses `unsafe` code inside a data structure to bend the rules.
 
 2. The trait defines a method that _immutably_ borrows `self`
 
-   - `fn foo(&self) {}`
+   - `fn foo(&self) { /* ... */ }`
 
 3. You want to mutate the state of self inside this method despite no access to a mutable reference, while still conforming to the trait signature.
 
@@ -233,28 +233,61 @@ This uses `unsafe` code inside a data structure to bend the rules.
          } // Dropped the mutable reference; so we're okay.
          let b = self.list.borrow();
          let c = self.list.borrow();
-         {
-             let d = self.list.borrow_mut(); // Panic!
-         }
+     	let d = self.list.borrow_mut(); // Panic!
      }
      ```
 
 
-# Summary
+## Leaking Memory with Reference Cycles
+
+- Using `Rc<T>` and `RefCell<T>` where the reference count never reaches zero.
+  - Be careful when you see nested types which makes use of:
+    - Interior mutability.
+    - Reference counting.
+- The memory leaks are still memory safe.
+- Logic bug; use tests to identify. Rust can't help you at runtime.
+- Can be solved by making the ownership unideriectional.
+  - Owner owns the child (`Rc<T>`).
+  - Child borrows a reference to the parent (`Weak<T>`).
+  - When the owner goes out of scope, so too does the child. 
+
+### Reference Counting
+
+- Strong references are how we share _ownership_ of an `Rc<T>` instance.
+  - `Rc::clone()` produces a  strong reference.
+  - `Rc<T>` is not dropped until the strong reference count hits zero, until all the owners are dead.
+    - Irrespective of the weak reference count.
+- Weak references **don't** express an ownership relationship.
+  - You want to use a thing if it's available, but you don't _need_ to use it.
+    - It's like making a coffee. You'd like a dash of milk, but you can handle black. So you check the fridge for milk. If there is milk, you add a dash to your coffee; otherwise you enjoy it without milk. In any case you don't have a hard dependency on the milk. You've relegated the milk use to runtime. 
+    - Whereas consider ordering a flat white. By definition of what it is, it requires the existence of milk. If there's no milk then you can't reasonably ask for, or expect, a flat white; since it can't actually be constructed. The milk is therefore hard dependency that gets resolved at compile time.
+  - `Rc::downgrade()` produces a weak reference.
+  - `Rc::upgrade()` attempts to grab a strong reference at runtime; `<Option<Rc<T>>`.
+    - If the value referenced has been dropped; option will match `None`.
+    - You can't directly use the value reference by `Weak<T>`, you must upgrade it.
+      - Analogous to opening the fridge to check for milk.
+      - Until you open the fridge you don't know if there's milk inside.
+      - Only once you open the fridge and grab the milk can you now use it.
+      - You have to be able to handle the case that there is no milk in the fridge.
+    - This means you're attempting to grab a reference at _runtime_, where that reference may not be valid when you attempt to use it, since compiler can't guarantee it's validity at compile time.
+    - `Weak<T>` is basically a handle to a strong reference `Rc<T>`, that allows you to attempt to resolve a strong reference at runtme. 
+    - This lets you reference data without being beholden to it's lifetime; but you must handle the case that the data has been dropped.
+    - You're saying "If it's there; great I'll use it. Otherwise I'll do without just fine."
+
+## Summary
 
 **Smart pointers:**
 
-- Push concerns from compile time to run time where there is  more information.
-  - `Box<Error>` for being polymorphic accross many implementations of `Error`.
+- Push concerns from compile time to run time where there is more information.
+  - `Box<Error>` for being polymorphic accross many implementations of trait `Error`.
     - You don't statically know the size of the implementor of the trait at compile time.
       - Polymorphic use of a trait, such as a `Vec<Error>` which might have 10 different concrete types that satisfy the `Error` trait.
     - Implementing recursive types.
   - `RefCell<T>` for enforcing borrow checking rules at runtime.
     - Useful for mutating data within immutable trait methods. 
     - Eg mock objects.
+    - Opens the door for memory leaks via reference cycles at runtime. 
+    - A reference cycle will also overflow the stack if you attempt to dereference it.
   - `Rc<T>` for when you don't statically know when the last consumer of a piece of data will finish.
     - This means the scope wherein `Rc<T>` is created doesn't have to exist for the entire length of the use of `Rc<T>`.
-- Inverts lifetime dependencies.
-  - Traditionally consumers of data are beholden to the owner of the data.
-  - With smart pointers the owner of the data is beholden to the consumers of it.
-  - `consumers -> owner` becomes `owner -> consumers`.
+    - The borrowers are no longer beholden to the lifetime of the owner of the data, the owner has volunteered to be beholden to collective lifetime of the borrowers.
